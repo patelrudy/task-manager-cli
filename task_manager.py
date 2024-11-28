@@ -1,6 +1,6 @@
 import datetime
 from colorama import Fore, Style
-from utils import load_tasks, save_tasks, print_help, load_config
+from utils import load_tasks, save_tasks, load_config
 from display import display_tasks
 
 def add_task(args):
@@ -44,16 +44,39 @@ def filter_tasks(args):
     tasks = apply_filters(tasks, filters)
     display_tasks(tasks)
 
-def update_status(args):
+def update_task(args):
     tasks = load_tasks()
+    task_found = False
     for task in tasks:
         if task['id'] == args.id:
-            task['status'] = args.status
+            task_found = True
+            if args.name:
+                task['name'] = args.name
+            if args.due:
+                try:
+                    due_date = parse_due_date(args.due, load_config().get('date_input_mode', 'strict'))
+                    task['due_date'] = due_date
+                except ValueError as ve:
+                    print(Fore.RED + str(ve) + Style.RESET_ALL)
+                    return
+            if args.desc:
+                task['description'] = args.desc
+            if args.tag:
+                task['tag'] = args.tag
+            if args.priority:
+                task['priority'] = args.priority
+            if args.status:
+                if args.status.lower() in ['not started', 'in progress', 'review', 'completed']:
+                    task['status'] = args.status.lower()
+                else:
+                    print(Fore.RED + "Invalid status. Choose from 'not started', 'in progress', 'review', 'completed'." + Style.RESET_ALL)
+                    return
             save_tasks(tasks)
-            print(Fore.GREEN + "Task status updated!" + Style.RESET_ALL)
-            return
-    print(Fore.RED + "Task not found." + Style.RESET_ALL)
-    print_help()
+            print(Fore.GREEN + "Task updated successfully!" + Style.RESET_ALL)
+            break
+    if not task_found:
+        print(Fore.RED + f"Task with ID {args.id} not found." + Style.RESET_ALL)
+        print("Type 'help' for more information.")
 
 def delete_task(args):
     tasks = load_tasks()
@@ -67,7 +90,7 @@ def delete_task(args):
             break
     if not task_found:
         print(Fore.RED + f"Task with ID {args.id} not found." + Style.RESET_ALL)
-        print_help()
+        print("Type 'help' for more information.")
 
 def apply_filters(tasks, filters):
     filtered_tasks = tasks
@@ -82,7 +105,7 @@ def apply_filters(tasks, filters):
             print(Fore.RED + str(ve) + Style.RESET_ALL)
             return []
         filtered_tasks = [
-            t for t in filtered_tasks 
+            t for t in filtered_tasks
             if start_date <= datetime.datetime.strptime(t['due_date'], '%Y-%m-%d').date() <= end_date
         ]
 
@@ -142,14 +165,14 @@ def parse_due_date(due_str, date_input_mode):
 def parse_filter_due_date(due_str):
     today = datetime.date.today()
     due_str_lower = due_str.lower()
-    
+
     if due_str_lower in ['today', 'tdy']:
         start_date = end_date = today
     elif due_str_lower in ['tomorrow', 'tmrw']:
         start_date = end_date = today + datetime.timedelta(days=1)
     elif due_str_lower in ['overmorrow', 'dat']:
         start_date = end_date = today + datetime.timedelta(days=2)
-    elif due_str_lower in ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 
+    elif due_str_lower in ['jan', 'feb', 'mar', 'apr', 'may', 'jun',
                            'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec']:
         month_str_to_int = {
             'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6,
@@ -175,7 +198,7 @@ def parse_filter_due_date(due_str):
             start_date = end_date = due_date_obj
         except ValueError:
             raise ValueError("Invalid due date filter format.")
-    
+
     return start_date, end_date
 
 def infer_year(month_day, today):

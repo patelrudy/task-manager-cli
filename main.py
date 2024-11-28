@@ -96,8 +96,13 @@ def parse_arguments(arguments):
     # Update command
     parser_update = task_subparsers.add_parser('update', help='Update a task')
     parser_update.add_argument('--id', type=int, required=True, help='Task ID')
-    parser_update.add_argument('--status', choices=['completed', 'started', 'in-progress'], required=True, help='New status')
-    parser_update.set_defaults(func=update_status)
+    parser_update.add_argument('--name', help='New task name')
+    parser_update.add_argument('--due', '-d', help='New due date')
+    parser_update.add_argument('--desc', '-s', help='New task description')
+    parser_update.add_argument('--tag', '-t', help='New task tag')
+    parser_update.add_argument('--priority', '-p', help='New task priority')
+    parser_update.add_argument('--status', choices=['not started', 'in progress', 'review', 'completed'], help='New status')
+    parser_update.set_defaults(func=update_task)
 
     # Delete command
     parser_delete = task_subparsers.add_parser('delete', help='Delete a task')

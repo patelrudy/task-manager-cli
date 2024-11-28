@@ -181,4 +181,4 @@ def print_suggestions(user_input):
 
 def print_error(e):
     print(Fore.RED + f"An error occurred: {e}" + Style.RESET_ALL)
-    print_help()
+    print("Type 'help' for more information.")

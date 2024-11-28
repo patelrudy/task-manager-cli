@@ -77,11 +77,14 @@ def apply_filters(tasks, filters):
 
     if due_filter:
         try:
-            due_date = parse_due_date(due_filter, date_input_mode)
+            start_date, end_date = parse_filter_due_date(due_filter)
         except ValueError as ve:
             print(Fore.RED + str(ve) + Style.RESET_ALL)
             return []
-        filtered_tasks = [t for t in filtered_tasks if t['due_date'] == due_date]
+        filtered_tasks = [
+            t for t in filtered_tasks 
+            if start_date <= datetime.datetime.strptime(t['due_date'], '%Y-%m-%d').date() <= end_date
+        ]
 
     if filters.get('priority'):
         filtered_tasks = [t for t in filtered_tasks if t['priority'].lower() == filters['priority'].lower()]
@@ -120,9 +123,9 @@ def parse_due_date(due_str, date_input_mode):
                 day = int(due_str)
                 if not 1 <= day <= 31:
                     raise ValueError
+                due_date = infer_month_and_year(day, today)
             except ValueError:
                 raise ValueError("Invalid day. Please enter a valid day (01-31).")
-            due_date = infer_month_and_year(day, today)
         else:
             raise ValueError("Invalid date format. Please use DD, MMDD, or YYYYMMDD.")
     else:
@@ -135,6 +138,45 @@ def parse_due_date(due_str, date_input_mode):
             raise ValueError("Invalid date. Please enter a valid date in YYYYMMDD format.")
 
     return due_date.strftime('%Y-%m-%d')
+
+def parse_filter_due_date(due_str):
+    today = datetime.date.today()
+    due_str_lower = due_str.lower()
+    
+    if due_str_lower in ['today', 'tdy']:
+        start_date = end_date = today
+    elif due_str_lower in ['tomorrow', 'tmrw']:
+        start_date = end_date = today + datetime.timedelta(days=1)
+    elif due_str_lower in ['overmorrow', 'dat']:
+        start_date = end_date = today + datetime.timedelta(days=2)
+    elif due_str_lower in ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 
+                           'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec']:
+        month_str_to_int = {
+            'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6,
+            'jul':7, 'aug':8, 'sep':9, 'sept':9, 'oct':10, 'nov':11, 'dec':12
+        }
+        month = month_str_to_int[due_str_lower]
+        year = today.year
+        start_date = datetime.date(year, month, 1)
+        if month == 12:
+            end_date = datetime.date(year + 1, 1, 1) - datetime.timedelta(days=1)
+        else:
+            end_date = datetime.date(year, month + 1, 1) - datetime.timedelta(days=1)
+    elif due_str.isdigit() and len(due_str) == 4:
+        # Assume it's a year
+        year = int(due_str)
+        start_date = datetime.date(year, 1, 1)
+        end_date = datetime.date(year, 12, 31)
+    else:
+        # Try parsing as date
+        try:
+            due_date = parse_due_date(due_str, load_config().get('date_input_mode', 'strict'))
+            due_date_obj = datetime.datetime.strptime(due_date, '%Y-%m-%d').date()
+            start_date = end_date = due_date_obj
+        except ValueError:
+            raise ValueError("Invalid due date filter format.")
+    
+    return start_date, end_date
 
 def infer_year(month_day, today):
     month = month_day.month

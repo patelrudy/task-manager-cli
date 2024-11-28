@@ -1,3 +1,5 @@
+# utils.py
+
 import os
 import json
 import platform
@@ -116,9 +118,17 @@ Available commands:
 
 - task filter [--due DATE] [--priority PRIORITY] [--name_prefix PREFIX] [--tag TAG] [--desc_contains SUBSTRING]
     Filter tasks based on criteria.
+    DATE can also be:
+        - 'today' or 'tdy' for today's date
+        - 'tomorrow' or 'tmrw' for tomorrow's date
+        - 'overmorrow' or 'dat' for the day after tomorrow
+        - Month abbreviations (e.g., 'jan', 'feb', 'mar', etc.) to filter tasks due in that month
+        - 4-digit year (e.g., '2023') to filter tasks due in that year
     Examples:
         task filter --priority high
         task filter --due 20231015
+        task filter --due today
+        task filter --due feb
 
 - task update --id ID --status STATUS
     Update the status of a task.
@@ -160,7 +170,7 @@ Available commands:
 def print_suggestions(user_input):
     commands = ['task', 'config', 'export', 'clear', 'help', 'exit']
     task_commands = ['add', 'list', 'filter', 'update', 'delete']
-    options = ['--add', '-a', '--update', '-u', '--delete', '-d', '--list', '-l', '--filter', '-f']
+    options = ['--due', '-d', '--priority', '-p', '--name_prefix', '-n', '--tag', '-t', '--desc_contains', '-s']
     input_command = user_input[0] if user_input else ''
     suggestions = get_close_matches(input_command, commands + task_commands + options, n=1, cutoff=0.6)
     if suggestions:

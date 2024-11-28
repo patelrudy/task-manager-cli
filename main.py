@@ -1,10 +1,10 @@
-# main.py
-
 import sys
 import shlex
 from argparse import ArgumentParser
 from colorama import init, Fore, Style
-from task_manager import parse_task_arguments
+from task_manager import (
+    add_task, list_tasks, update_status, delete_task, filter_tasks
+)
 from config_manager import configure
 from utils import (
     auto_export_check, export_tasks, print_help, print_suggestions, clear_screen, print_error
@@ -69,7 +69,40 @@ def parse_arguments(arguments):
 
     # Task command
     parser_task = subparsers.add_parser('task', help='Task operations')
-    parse_task_arguments(parser_task)
+    task_subparsers = parser_task.add_subparsers(dest='task_command')
+
+    # Add command
+    parser_add = task_subparsers.add_parser('add', help='Add a new task')
+    parser_add.add_argument('name', help='Task name')
+    parser_add.add_argument('--due', '-d', required=True, help='Due date')
+    parser_add.add_argument('--desc', '-s', help='Task description')
+    parser_add.add_argument('--tag', '-t', help='Task tag')
+    parser_add.add_argument('--priority', '-p', help='Task priority')
+    parser_add.set_defaults(func=add_task)
+
+    # List command
+    parser_list = task_subparsers.add_parser('list', help='List all tasks')
+    parser_list.set_defaults(func=list_tasks)
+
+    # Filter command
+    parser_filter = task_subparsers.add_parser('filter', help='Filter tasks')
+    parser_filter.add_argument('--due', '-d', help='Filter by due date')
+    parser_filter.add_argument('--priority', '-p', help='Filter by priority')
+    parser_filter.add_argument('--name_prefix', '-n', help='Filter by name prefix')
+    parser_filter.add_argument('--tag', '-t', help='Filter by tag')
+    parser_filter.add_argument('--desc_contains', '-s', help='Filter by description substring')
+    parser_filter.set_defaults(func=filter_tasks)
+
+    # Update command
+    parser_update = task_subparsers.add_parser('update', help='Update a task')
+    parser_update.add_argument('--id', type=int, required=True, help='Task ID')
+    parser_update.add_argument('--status', choices=['completed', 'started', 'in-progress'], required=True, help='New status')
+    parser_update.set_defaults(func=update_status)
+
+    # Delete command
+    parser_delete = task_subparsers.add_parser('delete', help='Delete a task')
+    parser_delete.add_argument('--id', type=int, required=True, help='Task ID')
+    parser_delete.set_defaults(func=delete_task)
 
     # Configure
     parser_config = subparsers.add_parser('config', help='Configure settings')

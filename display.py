@@ -1,5 +1,3 @@
-# display.py
-
 import datetime
 from colorama import Fore, Style
 

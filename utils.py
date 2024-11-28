@@ -1,5 +1,3 @@
-# utils.py
-
 import os
 import json
 import platform
@@ -101,46 +99,40 @@ def print_help():
     help_text = """
 Available commands:
 
-- task --add [-a] "name" --due DATE [--desc "description"] [--tag "tag"] [--priority "priority"]
+- task add "name" --due DATE [--desc "description"] [--tag "tag"] [--priority "priority"]
     Add a new task.
     DATE can be in the following formats:
         - YYYYMMDD (e.g., 20231015)
         - MMDD (e.g., 1015) if 'date_input_mode' is set to 'smart'
         - DD (e.g., 15) if 'date_input_mode' is set to 'smart'
     Examples:
-        task --add "Write Report" --due 20231015 --desc "Write the annual report" --tag work --priority high
-        task --add "Team Meeting" --due 1016
+        task add "Write Report" --due 20231015 --desc "Write the annual report" --tag work --priority high
+        task add "Team Meeting" --due 1016
 
-- task --list [-l]
+- task list
     List all tasks.
     Example:
-        task --list
+        task list
 
-- task --filter [-f] <key> <value> [<key> <value> ...]
-    List tasks with filters.
-    Available filter keys:
-        - due_date (YYYY-MM-DD)
-        - priority
-        - name_prefix
-        - tag
-        - desc_contains
+- task filter [--due DATE] [--priority PRIORITY] [--name_prefix PREFIX] [--tag TAG] [--desc_contains SUBSTRING]
+    Filter tasks based on criteria.
     Examples:
-        task --filter priority high
-        task --filter due_date 2023-10-15
+        task filter --priority high
+        task filter --due 20231015
 
-- task --update [-u] --id <id> --status <status>
+- task update --id ID --status STATUS
     Update the status of a task.
     Status options:
         - completed
         - started
         - in-progress
     Example:
-        task --update --id 1 --status completed
+        task update --id 1 --status completed
 
-- task --delete [-d] --id <id>
+- task delete --id ID
     Delete a task.
     Example:
-        task --delete --id 2
+        task delete --id 2
 
 - config [--auto_export True|False] [--export_path "/path/to/directory"] [--date_input_mode smart|strict]
     Configure settings.
@@ -167,9 +159,10 @@ Available commands:
 
 def print_suggestions(user_input):
     commands = ['task', 'config', 'export', 'clear', 'help', 'exit']
+    task_commands = ['add', 'list', 'filter', 'update', 'delete']
     options = ['--add', '-a', '--update', '-u', '--delete', '-d', '--list', '-l', '--filter', '-f']
     input_command = user_input[0] if user_input else ''
-    suggestions = get_close_matches(input_command, commands + options, n=1, cutoff=0.6)
+    suggestions = get_close_matches(input_command, commands + task_commands + options, n=1, cutoff=0.6)
     if suggestions:
         print(Fore.YELLOW + f"Did you mean '{suggestions[0]}'?" + Style.RESET_ALL)
     else:

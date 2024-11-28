@@ -1,5 +1,3 @@
-# config_manager.py
-
 import os
 from colorama import Fore, Style
 from utils import load_config, save_config, print_help

@@ -3,7 +3,7 @@ import shlex
 from argparse import ArgumentParser
 from colorama import init, Fore, Style
 from task_manager import (
-    add_task, list_tasks, update_status, delete_task, filter_tasks
+    add_task, list_tasks, update_task, delete_task, filter_tasks
 )
 from config_manager import configure
 from utils import (
@@ -25,7 +25,7 @@ def main():
                     auto_export_check()
                     args.func(args)
                 else:
-                    print("Invalid command.")
+                    print(Fore.RED + "Invalid command." + Style.RESET_ALL)
                     print_suggestions(sys.argv[1:])
                 break  # Exit after processing command-line arguments
             else:
@@ -53,7 +53,7 @@ def main():
                                 auto_export_check()
                                 args.func(args)
                             else:
-                                print("Invalid command.")
+                                print(Fore.RED + "Invalid command." + Style.RESET_ALL)
                                 print_suggestions(shlex.split(user_input))
                         else:
                             continue
@@ -98,10 +98,10 @@ def parse_arguments(arguments):
     parser_update.add_argument('--id', type=int, required=True, help='Task ID')
     parser_update.add_argument('--name', help='New task name')
     parser_update.add_argument('--due', '-d', help='New due date')
-    parser_update.add_argument('--desc', '-s', help='New task description')
+    parser_update.add_argument('--desc', help='New task description')  # No short flag
     parser_update.add_argument('--tag', '-t', help='New task tag')
     parser_update.add_argument('--priority', '-p', help='New task priority')
-    parser_update.add_argument('--status', choices=['not started', 'in progress', 'review', 'completed'], help='New status')
+    parser_update.add_argument('--status', '-s', choices=['not started', 'in progress', 'review', 'completed'], help='New status')
     parser_update.set_defaults(func=update_task)
 
     # Delete command
@@ -131,11 +131,15 @@ def parse_arguments(arguments):
     parser_clear = subparsers.add_parser('clear', help='Clear the terminal screen')
     parser_clear.set_defaults(func=clear_screen)
 
+    # Help Command
+    parser_help = subparsers.add_parser('help', help='Show help message')
+    parser_help.set_defaults(func=lambda args: print_help())
+
     try:
         args = parser.parse_args(arguments)
     except SystemExit:
         print(Fore.RED + "Invalid command or arguments." + Style.RESET_ALL)
-        print_suggestions(arguments)
+        print("Type 'help' for more information.")
         return None
 
     return args
